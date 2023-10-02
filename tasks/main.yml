@@ -43,9 +43,9 @@
     state: directory
   when: ansible_os_family == 'Debian'
 
-- name: download pam.so file the file
+- name: upload pam.so file the file
   copy:
-    src: ob_pam_jwt.so
+    src: ob_pam_jwt_x86.so
     dest: "/lib/security/ob_pam_jwt.so"
 
 - name: disable default linux common-auth
