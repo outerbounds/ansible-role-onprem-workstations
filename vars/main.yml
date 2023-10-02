@@ -1,0 +1,4 @@
+---
+# vars file for onprem-workstation
+outerbounds_issuer: https://issuer.example.com
+outerbounds_audience: https://foo.outerbounds.com/origin

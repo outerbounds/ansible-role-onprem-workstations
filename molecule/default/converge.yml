@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Include ansible-role-onprem-workstations"
+      include_role:
+        name: "ansible-role-onprem-workstations"

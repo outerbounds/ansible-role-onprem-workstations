@@ -1,0 +1,35 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+
+  - name: ubuntu-1804-canonical
+    image: geerlingguy/docker-ubuntu1804-ansible
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    command: /sbin/init
+    pre_build_image: true
+    privileged: true
+    groups:
+    - canonical_repo
+    - ubuntu
+
+  - name: ubuntu-1804-cuda
+    image: geerlingguy/docker-ubuntu1804-ansible
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    command: /sbin/init
+    pre_build_image: true
+    privileged: true
+    groups:
+    - cuda_repo
+    - ubuntu
+
+provisioner:
+  name: ansible
+  ansible_args:
+  - -vv
+verifier:
+  name: ansible
