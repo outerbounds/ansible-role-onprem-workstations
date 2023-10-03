@@ -67,3 +67,4 @@
     line: "PasswordAuthentication yes"
     backup: true
     backrefs: true
+    notify: restart_ssh_service
