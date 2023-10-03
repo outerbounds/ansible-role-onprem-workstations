@@ -1,0 +1,13 @@
+---
+- name: create user 'outerbounds'
+  user:
+    name: outerbounds
+    state: present
+    shell: /bin/bash
+  when: ansible_os_family == 'Debian'
+
+- name: add "outerbounds" to the Docker group
+  user:
+    name: outerbounds
+    groups: docker
+    append: yes
