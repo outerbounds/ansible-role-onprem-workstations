@@ -4,7 +4,6 @@
   service:
     name: ssh
     state: restarted
-  when: ansible_os_family == 'Debian'
 
 - name: restart_docker_service
   ansible.builtin.service:

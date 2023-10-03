@@ -1,0 +1,69 @@
+---
+- name: create /lib/security directory if it doesn't exist
+  file:
+    path: /lib/security
+    state: directory
+
+- name: get the latest release info from github
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/outerbounds/pam-jwt/releases/latest
+    return_content: true
+  register: json_response
+
+- name: download pam_jwt source code
+  get_url:
+    url: "{{ json_response.json.tarball_url }}"
+    dest: /tmp/pam-jwt.tar
+  check_mode: false
+
+- name: create /tmp/pam-jwt if it doesn't exist
+  file:
+    path: /tmp/pam-jwt
+    state: directory
+
+- name: unarchive pam_jwt source code
+  ansible.builtin.unarchive:
+    src: /tmp/pam-jwt.tar
+    dest: /tmp/pam-jwt
+    remote_src: true
+  check_mode: false
+
+- name: list /tmp/pam-jwt
+  command: ls /tmp/pam-jwt
+  register: pam_dir
+
+- name: build pam_jwt.so file
+  shell:
+    cmd: GOROOT=/usr/local/go GOPATH=$HOME/go PATH=$GOPATH/bin:$GOROOT/bin:$PATH make build
+    chdir: /tmp/pam-jwt/{{ pam_dir.stdout }}
+    creates: /tmp/pam-jwt/{{ pam_dir.stdout }}/pam_jwt.so
+
+- name: copy pam_jwt.so file to destination
+  copy:
+    src: /tmp/pam-jwt/{{ pam_dir.stdout }}/pam_jwt.so
+    dest: /lib/security/pam_jwt.so
+    remote_src: true
+    mode: '0644'
+  check_mode: false
+
+- name: remove pam_jwt folder
+  file:
+    path: /tmp/pam-jwt
+    state: absent
+  check_mode: false
+
+- name: add outerbounds PAM configuration
+  ansible.builtin.template:
+    src: sshd.tmpl
+    dest: /etc/pam.d/sshd
+    mode: '0644'
+    backup: true
+    notify: restart_ssh_service
+
+- name: enable password authentication
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication no$"
+    line: "PasswordAuthentication yes"
+    backup: true
+    backrefs: true

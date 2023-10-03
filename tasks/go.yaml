@@ -1,0 +1,25 @@
+---
+- name: download go tar file
+  command: wget https://go.dev/dl/go{{go_version}}.linux-amd64.tar.gz
+
+- name: delete previous installation
+  command: rm -rf /usr/local/go
+
+- name: extract and move new go folder to /usr/local
+  command: tar -C /usr/local -xzf go{{go_version}}.linux-amd64.tar.gz
+
+- name: delete downloaded tar file
+  shell: rm -rf go{{go_version}}.linux-amd64.tar.gz*
+
+- name: add go binary path to ~/.profile
+  lineinfile:
+    path: ~/.profile
+    line: |
+      export GOROOT=/usr/local/go
+      export GOPATH=$HOME/go
+      export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+    create: true
+    state: present
+
+- name: Source updated profile
+  shell: . ~/.profile
