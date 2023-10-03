@@ -1,0 +1,21 @@
+---
+- name: verify target host architecture
+  assert:
+    that:
+      - ansible_architecture == 'x86_64'
+    fail_msg: "error: target host doesn't have x86_64 architecture"
+    success_msg: "validated target host has x86_64 architecture"
+
+- name: update apt cache
+  apt:
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+  when: ansible_os_family == 'Debian'
