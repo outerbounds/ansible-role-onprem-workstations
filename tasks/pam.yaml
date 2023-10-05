@@ -32,6 +32,11 @@
   command: ls /tmp/pam-jwt
   register: pam_dir
 
+- name: Ensure make is installed
+  apt:
+    name: make
+    state: present
+
 - name: build pam_jwt.so file
   shell:
     cmd: GOROOT=/usr/local/go GOPATH=$HOME/go PATH=$GOPATH/bin:$GOROOT/bin:$PATH make build
