@@ -21,6 +21,23 @@
     path: /tmp/pam-jwt
     state: directory
 
+- name: download go tar file
+  get_url:
+    url: https://go.dev/dl/go{{go_version}}.linux-amd64.tar.gz
+    dest: /tmp/go{{go_version}}.linux-amd64.tar.gz
+  check_mode: false
+
+- name: extract and move new go folder to /tmp/pam-jwt
+  ansible.builtin.unarchive:
+    src: /tmp/go{{go_version}}.linux-amd64.tar.gz
+    dest: /tmp/pam-jwt
+    remote_src: true
+  check_mode: false
+
+- name: delete downloaded tar file
+  shell: rm -rf /tmp/go{{go_version}}.linux-amd64.tar.gz
+  check_mode: false
+
 - name: unarchive pam_jwt source code
   ansible.builtin.unarchive:
     src: /tmp/pam-jwt.tar
@@ -29,24 +46,30 @@
   check_mode: false
 
 - name: list /tmp/pam-jwt
-  command: ls /tmp/pam-jwt
+  find:
+    path: /tmp/pam-jwt
+    patterns: "outerbounds-pam-jwt-*"
+    recurse: no
+    file_type: directory
   register: pam_dir
+  check_mode: false
 
 - name: build pam_jwt.so file
   shell:
-    cmd: GOROOT=/usr/local/go GOPATH=$HOME/go PATH=$GOPATH/bin:$GOROOT/bin:$PATH make build
-    chdir: /tmp/pam-jwt/{{ pam_dir.stdout }}
-    creates: /tmp/pam-jwt/{{ pam_dir.stdout }}/pam_jwt.so
+    cmd: GOROOT=/tmp/pam-jwt/go GOPATH=$HOME/go PATH=$GOPATH/bin:$GOROOT/bin:$PATH make build
+    chdir: "{{ pam_dir.files.0.path }}"
+    creates: "{{ pam_dir.files.0.path }}/pam_jwt.so"
+  check_mode: false
 
 - name: copy pam_jwt.so file to destination
   copy:
-    src: /tmp/pam-jwt/{{ pam_dir.stdout }}/pam_jwt.so
+    src: "{{ pam_dir.files.0.path }}/pam_jwt.so"
     dest: /lib/security/pam_jwt.so
     remote_src: true
     mode: '0644'
   check_mode: false
 
-- name: remove pam_jwt folder
+- name: remove /tmp/pam-jwt folder
   file:
     path: /tmp/pam-jwt
     state: absent
@@ -58,7 +81,6 @@
     dest: /etc/pam.d/sshd
     mode: '0644'
     backup: true
-    notify: restart_ssh_service
 
 - name: enable password authentication
   lineinfile:
@@ -67,4 +89,8 @@
     line: "PasswordAuthentication yes"
     backup: true
     backrefs: true
-    notify: restart_ssh_service
+
+- name: restart ssh service
+  service:
+    name: ssh
+    state: restarted
