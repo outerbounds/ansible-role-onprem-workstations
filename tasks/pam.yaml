@@ -39,7 +39,7 @@
 
 - name: build pam_jwt.so file
   shell:
-    cmd: GOROOT=/usr/local/go GOPATH=$HOME/go PATH=$GOPATH/bin:$GOROOT/bin:$PATH make
+    cmd: GOROOT=/usr/local/go GOPATH=$HOME/go PATH=$GOPATH/bin:$GOROOT/bin:$PATH make build
     chdir: /tmp/pam-jwt/{{ pam_dir.stdout }}
     creates: /tmp/pam-jwt/{{ pam_dir.stdout }}/pam_jwt.so
 
